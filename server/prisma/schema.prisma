@@ -8,13 +8,11 @@ datasource db {
 }
 
 model User {
-  id                  String          @id @default(cuid())
+  id                  Int          @id @default(autoincrement())
   createdAt                        DateTime        @default(now())
   updatedAt                        DateTime        @updatedAt
   email           String  @unique
   password      String
-  role          String
-  lastLogin     DateTime?
   resetPasswordToken String
   dateResetPasswordRequest DateTime?
   validateEmailToken String
@@ -22,5 +20,79 @@ model User {
   name  String
 }
 
+model NewsGroup {
+  id                  Int          @id @default(autoincrement())
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime        @updatedAt
+  name  String
+  categotyList CategoryList[] @relation(fields: [categotyListId], references: [id])
+  categotyListId Int
+  sourceList SourceList[] @relation(fields: [sourceListId], references: [id])
+  sourceListId Int
 
+}
+model CategoryList {
+  id                  Int          @id @default(autoincrement())
+  name  String
+  tags TagsList[] @relation(fields: [tagsListId], references: [id])
+  tagsListId Int
+  newsGroup NewsGroup[]
+}
+model TagsList {
+  id                  Int          @id @default(autoincrement())
+  name  String
+  categoryList CategoryList[]
+}
+model SourceList {
+  id                  Int          @id @default(autoincrement())
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime        @updatedAt
+  name  String
+  totalCount Int
+  newsSource NewsSource[] @relation(fields: [newsSourceId], references: [id])
+  newsSourceId Int
+  newsGroup NewsGroup[]
+}
+model NewsSource {
+  id                  Int          @id @default(autoincrement())
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime        @updatedAt
+  name  String
+  count Int
+  news News[] @relation(fields: [newsId], references: [id])
+  newsId Int
+  sourceList SourceList[]
+}
+model News {
+  id                  Int          @id @default(autoincrement())
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime        @updatedAt
+  article Article @relation(fields: [articleId], references: [id])
+  articleId Int
+  newsSource NewsSource[]
+}
+model Author {
+  id                  Int          @id @default(autoincrement())
+  name  String
+  articleList ArticleList[] @relation(fields: [articleListId], references: [id])
+  articleListId Int
+  article Article[]
+}
+model ArticleList {
+  id                  Int          @id @default(autoincrement())
+  article Article[] @relation(fields: [articleId], references: [id])
+  articleId Int
+  author Author[]
+}
+model Article {
+  id                  Int          @id @default(autoincrement())
+  createdAt                        DateTime        @default(now())
+  updatedAt                        DateTime        @updatedAt
+  name  String
+  author Author @relation(fields: [authorId], references: [id])
+  authorId Int
+  linkToWebSite String
+  news News[]
+  articleList ArticleList[]
+}
 
