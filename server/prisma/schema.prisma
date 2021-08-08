@@ -3,96 +3,91 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = "file:./dev.db"
 }
 
 model User {
-  id                  Int          @id @default(autoincrement())
-  createdAt                        DateTime        @default(now())
-  updatedAt                        DateTime        @updatedAt
-  email           String  @unique
-  password      String
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  email String @unique
+  password String
   resetPasswordToken String
-  dateResetPasswordRequest DateTime?
   validateEmailToken String
   isEmailValidated Boolean
-  name  String
+  name String
+  feeds Feeds[] @relation(fields: [feedsId], references: [id])
+  feedsId Int
+  billingPlan BillingPlan[] @relation(fields: [bilingPlanId], references: [id])
+  bilingPlanId Int
 }
 
-model NewsGroup {
-  id                  Int          @id @default(autoincrement())
-  createdAt                        DateTime        @default(now())
-  updatedAt                        DateTime        @updatedAt
-  name  String
-  categotyList CategoryList[] @relation(fields: [categotyListId], references: [id])
-  categotyListId Int
-  sourceList SourceList[] @relation(fields: [sourceListId], references: [id])
-  sourceListId Int
+// this is a model for a personal rss
+// "Feeds" to "User" is many to many, cause user can share his Feeds
+model Feeds {
+  id Int @id @default(autoincrement())
+  name String
+  source Source[] @relation(fields: [sourceId], references: [id])
+  sourceId Int
+  user User[]
+}
 
-}
-model CategoryList {
-  id                  Int          @id @default(autoincrement())
-  name  String
-  tags TagsList[] @relation(fields: [tagsListId], references: [id])
-  tagsListId Int
-  newsGroup NewsGroup[]
-}
-model TagsList {
-  id                  Int          @id @default(autoincrement())
-  name  String
-  categoryList CategoryList[]
-}
-model SourceList {
-  id                  Int          @id @default(autoincrement())
-  createdAt                        DateTime        @default(now())
-  updatedAt                        DateTime        @updatedAt
-  name  String
-  totalCount Int
-  newsSource NewsSource[] @relation(fields: [newsSourceId], references: [id])
-  newsSourceId Int
-  newsGroup NewsGroup[]
-}
-model NewsSource {
-  id                  Int          @id @default(autoincrement())
-  createdAt                        DateTime        @default(now())
-  updatedAt                        DateTime        @updatedAt
-  name  String
-  count Int
-  news News[] @relation(fields: [newsId], references: [id])
-  newsId Int
-  sourceList SourceList[]
-}
-model News {
-  id                  Int          @id @default(autoincrement())
-  createdAt                        DateTime        @default(now())
-  updatedAt                        DateTime        @updatedAt
+// this is a model where news was created (publisher)
+// "Feeds" to "Source" is many to many, cause user can add the same source
+//  to the different Feeds
+model Source {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name String
   article Article @relation(fields: [articleId], references: [id])
   articleId Int
-  newsSource NewsSource[]
+  feeds Feeds[]
 }
-model Author {
-  id                  Int          @id @default(autoincrement())
-  name  String
-  articleList ArticleList[] @relation(fields: [articleListId], references: [id])
-  articleListId Int
-  article Article[]
-}
-model ArticleList {
-  id                  Int          @id @default(autoincrement())
-  article Article[] @relation(fields: [articleId], references: [id])
-  articleId Int
-  author Author[]
-}
+
+// this is a model of one Article(a News)
+// "Source" to "Article" is many to many, cause Source have many Article, 
+//  and one Article can be published in different Sources
 model Article {
-  id                  Int          @id @default(autoincrement())
-  createdAt                        DateTime        @default(now())
-  updatedAt                        DateTime        @updatedAt
-  name  String
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name String
   author Author @relation(fields: [authorId], references: [id])
   authorId Int
   linkToWebSite String
-  news News[]
-  articleList ArticleList[]
+  source Source[]
+}
+
+// this is a model of one Author
+// "Article" to "Author" is many to many, cause Article may be written by many Authors
+//  and one Author may write many Articles
+model Author {
+  id Int @id @default(autoincrement())
+  name String
+  article Article[]
+}
+
+// this is an enum for billing
+enum BillingName {
+  Free
+  Pro
+  ProPlus
+  Enterprise
+}
+
+// this is a model of one Author
+// "User" to "BillingPlan" is many to many, cause User may have different billing plans
+//  and one billing plan may use different users
+model BillingPlan {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name BillingName
+  price Int
+  // "features" - it is a difference between different billing plans
+  features String
+  user User[]
 }
 
